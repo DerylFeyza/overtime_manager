@@ -7,6 +7,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { format } from 'date-fns';
+
 import {
     Form,
     FormControl,
@@ -26,7 +28,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from '@inertiajs/react';
-import { format } from 'date-fns';
 import { Clock, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -84,18 +85,15 @@ export default function Welcome({
         console.log(values);
         setIsSubmitting(true);
         try {
-            // Extract date from startTime
-            const entryDate = format(values.startTime, 'yyyy-MM-dd');
-            const startTime = format(values.startTime, 'HH:mm');
-            const finishTime = format(values.finishTime, 'HH:mm');
-
             router.post(
                 '/entries',
                 {
                     person: values.person,
-                    date: entryDate,
-                    start_time: startTime,
-                    finish_time: finishTime,
+                    start_date: format(values.startTime, 'yyyy-MM-dd HH:mm:ss'),
+                    finish_date: format(
+                        values.finishTime,
+                        'yyyy-MM-dd HH:mm:ss',
+                    ),
                     description: values.description,
                     status: values.status,
                 },
@@ -106,6 +104,7 @@ export default function Welcome({
                         form.reset();
                     },
                     onError: (errors) => {
+                        console.log(values.startTime, values.finishTime);
                         console.error('Validation errors:', errors);
                         toast.error(
                             'Failed to add overtime entry. Please check the form.',

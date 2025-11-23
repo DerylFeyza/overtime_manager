@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('entries', function (Blueprint $table) {
             $table->id();
             $table->string('person');
-            $table->date('start_date');
-            $table->date('finish_date');
+            $table->dateTime('start_date');
+            $table->dateTime('finish_date');
             $table->text('description');
             $table->string('status')->default('Pending');
             $table->timestamps();

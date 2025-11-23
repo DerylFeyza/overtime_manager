@@ -27,9 +27,8 @@ class EntryController extends Controller
   {
     $validated = $request->validate([
       'person' => 'required|string|max:100',
-      'date' => 'required|date',
-      'start_time' => 'required|date_format:H:i',
-      'finish_time' => 'required|date_format:H:i|after:start_time',
+      'start_date' => 'required|date',
+      'finish_date' => 'required|date|after:start_date',
       'description' => 'required|string|max:500',
       'status' => 'required|in:Pending,Compensated,Not Compensated',
     ]);
@@ -38,7 +37,6 @@ class EntryController extends Controller
 
     return redirect()->back()->with('success', 'Entry created successfully');
   }
-
   /**
    * Display the specified resource.
    */
@@ -56,9 +54,8 @@ class EntryController extends Controller
   {
     $validated = $request->validate([
       'person' => 'required|string|max:100',
-      'date' => 'required|date',
-      'start_time' => 'required|date_format:H:i',
-      'finish_time' => 'required|date_format:H:i|after:start_time',
+      'start_date' => 'required|date',
+      'finish_date' => 'required|date|after:start_date',
       'description' => 'required|string|max:500',
       'status' => 'required|in:Pending,Compensated,Not Compensated',
     ]);
@@ -67,7 +64,6 @@ class EntryController extends Controller
 
     return redirect()->back()->with('success', 'Entry updated successfully');
   }
-
   /**
    * Remove the specified resource from storage.
    */

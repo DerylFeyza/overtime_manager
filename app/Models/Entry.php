@@ -12,15 +12,15 @@ class Entry extends Model
   protected $fillable = [
     'person',
     'date',
-    'start_time',
-    'finish_time',
+    'start_date',
+    'finish_date',
     'description',
     'status',
   ];
 
   protected $casts = [
     'date' => 'date',
-    'start_time' => 'datetime:H:i',
-    'finish_time' => 'datetime:H:i',
+    'start_date' => 'datetime:H:i',
+    'finish_date' => 'datetime:H:i',
   ];
 }

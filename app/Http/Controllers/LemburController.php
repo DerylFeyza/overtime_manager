@@ -53,16 +53,12 @@ class LemburController extends Controller
   public function update(Request $request, Lembur $entry)
   {
     $validated = $request->validate([
-      'person' => 'required|string|max:100',
-      'start_date' => 'required|date',
-      'finish_date' => 'required|date|after:start_date',
-      'description' => 'required|string|max:500',
       'status' => 'required|in:Pending,Compensated,Not Compensated',
     ]);
 
     $entry->update($validated);
 
-    return redirect()->back()->with('success', 'Lembur updated successfully');
+    return redirect()->back();
   }
   /**
    * Remove the specified resource from storage.
@@ -71,6 +67,6 @@ class LemburController extends Controller
   {
     $entry->delete();
 
-    return redirect()->back()->with('success', 'Lembur deleted successfully');
+    return redirect()->back();
   }
 }

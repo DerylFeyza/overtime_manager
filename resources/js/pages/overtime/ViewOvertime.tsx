@@ -25,7 +25,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -73,134 +72,134 @@ interface PaginationData {
     total: number;
 }
 
+interface Filters {
+    search: string;
+    status: string;
+    sort_field: string;
+    sort_order: string;
+}
+
 export default function ViewOvertime({
     entries: paginatedEntries,
+    filters,
 }: {
     entries: PaginationData;
+    filters: Filters;
 }) {
-    const [entries, setEntries] = useState<Lembur[]>([]);
-    const [filteredEntries, setFilteredEntries] = useState<Lembur[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [sortField, setSortField] = useState<SortField>('created_at');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+    const [searchTerm, setSearchTerm] = useState(filters.search);
+    const [statusFilter, setStatusFilter] = useState(filters.status);
+    const [sortField, setSortField] = useState<SortField>(
+        filters.sort_field as SortField,
+    );
+    const [sortOrder, setSortOrder] = useState<SortOrder>(
+        filters.sort_order as SortOrder,
+    );
     const [deleteId, setDeleteId] = useState<string | null>(null);
-
-    useEffect(() => {
-        try {
-            setEntries(paginatedEntries.data);
-            setFilteredEntries(paginatedEntries.data);
-        } catch (error) {
-            console.error('Error fetching entries:', error);
-            toast.error('Failed to load overtime entries');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [paginatedEntries]);
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
-        router.get(url, {}, { preserveState: true, preserveScroll: true });
+        router.get(
+            url,
+            {
+                search: searchTerm,
+                status: statusFilter,
+                sort_field: sortField,
+                sort_order: sortOrder,
+                per_page: paginatedEntries.per_page,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     useEffect(() => {
-        let filtered = [...entries];
-
-        // Search filter
-        if (searchTerm) {
-            filtered = filtered.filter(
-                (entry) =>
-                    entry.person
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase()) ||
-                    entry.description
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase()),
+        const timer = setTimeout(() => {
+            router.get(
+                '/list',
+                {
+                    search: searchTerm,
+                    status: statusFilter,
+                    sort_field: sortField,
+                    sort_order: sortOrder,
+                    per_page: paginatedEntries.per_page,
+                },
+                { preserveState: true, preserveScroll: true },
             );
-        }
+        }, 300);
 
-        // Status filter
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(
-                (entry) => entry.status === statusFilter,
-            );
-        }
+        return () => clearTimeout(timer);
+    }, [
+        searchTerm,
+        statusFilter,
+        sortField,
+        sortOrder,
+        paginatedEntries.per_page,
+    ]);
 
-        // Sort
-        filtered.sort((a, b) => {
-            let comparison = 0;
-            if (sortField === 'created_at') {
-                comparison =
-                    new Date(a.created_at).getTime() -
-                    new Date(b.created_at).getTime();
-            } else if (sortField === 'start_date') {
-                comparison =
-                    new Date(a.start_date).getTime() -
-                    new Date(b.start_date).getTime();
-            } else if (sortField === 'finish_date') {
-                comparison =
-                    new Date(a.finish_date).getTime() -
-                    new Date(b.finish_date).getTime();
-            } else if (sortField === 'duration') {
-                const durationA =
-                    new Date(a.finish_date).getTime() -
-                    new Date(a.start_date).getTime();
-                const durationB =
-                    new Date(b.finish_date).getTime() -
-                    new Date(b.start_date).getTime();
-                comparison = durationA - durationB;
-            }
-            return sortOrder === 'asc' ? comparison : -comparison;
+    const handleStatusUpdate = (id: string, newStatus: string) => {
+        const loadingToastId = toast.loading('Updating status...');
+
+        router.put(
+            `/entries/${id}`,
+            { status: newStatus },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Status updated successfully', {
+                        id: loadingToastId,
+                    });
+                },
+                onError: () => {
+                    toast.error('Failed to update status', {
+                        id: loadingToastId,
+                    });
+                },
+            },
+        );
+    };
+
+    const handleDelete = () => {
+        if (!deleteId) return;
+        const loadingToastId = toast.loading('Deleting lembur...');
+        router.delete(`/entries/${deleteId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Entry deleted successfully', {
+                    id: loadingToastId,
+                });
+                setDeleteId(null);
+            },
+            onError: () => {
+                toast.error('Failed to delete entry', { id: loadingToastId });
+            },
         });
-
-        setFilteredEntries(filtered);
-    }, [entries, searchTerm, statusFilter, sortField, sortOrder]);
-
-    // const handleStatusUpdate = async (id: string, newStatus: string) => {
-    //   try {
-    //     const { error } = await supabase
-    //       .from("overtime_entries")
-    //       .update({ status: newStatus })
-    //       .eq("id", id);
-
-    //     if (error) throw error;
-
-    //     setEntries((prev) =>
-    //       prev.map((entry) => (entry.id === id ? { ...entry, status: newStatus as any } : entry))
-    //     );
-    //     toast.success("Status updated successfully");
-    //   } catch (error) {
-    //     console.error("Error updating status:", error);
-    //     toast.error("Failed to update status");
-    //   }
-    // };
-
-    // const handleDelete = async () => {
-    //   if (!deleteId) return;
-
-    //   try {
-    //     const { error } = await supabase.from("overtime_entries").delete().eq("id", deleteId);
-
-    //     if (error) throw error;
-
-    //     setEntries((prev) => prev.filter((entry) => entry.id !== deleteId));
-    //     toast.success("Entry deleted successfully");
-    //   } catch (error) {
-    //     console.error("Error deleting entry:", error);
-    //     toast.error("Failed to delete entry");
-    //   } finally {
-    //     setDeleteId(null);
-    //   }
-    // };
+    };
 
     const toggleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortOrder('asc');
-        }
+        const newSortOrder =
+            sortField === field
+                ? sortOrder === 'asc'
+                    ? 'desc'
+                    : 'asc'
+                : 'asc';
+
+        router.get(
+            '/list',
+            {
+                search: searchTerm,
+                status: statusFilter,
+                sort_field: field,
+                sort_order: newSortOrder,
+                per_page: paginatedEntries.per_page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSortField(field);
+                    setSortOrder(newSortOrder);
+                },
+            },
+        );
     };
 
     const calculateDuration = (start: string, finish: string) => {
@@ -286,16 +285,42 @@ export default function ViewOvertime({
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
+
+                                <Select
+                                    value={paginatedEntries.per_page.toString()}
+                                    onValueChange={(value) => {
+                                        router.get(
+                                            '/list',
+                                            { per_page: value },
+                                            { preserveState: true },
+                                        );
+                                    }}
+                                >
+                                    <SelectTrigger className="w-[120px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-50 bg-popover">
+                                        <SelectItem value="5">
+                                            5 / page
+                                        </SelectItem>
+                                        <SelectItem value="10">
+                                            10 / page
+                                        </SelectItem>
+                                        <SelectItem value="25">
+                                            25 / page
+                                        </SelectItem>
+                                        <SelectItem value="50">
+                                            50 / page
+                                        </SelectItem>
+                                        <SelectItem value="100">
+                                            100 / page
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
-                        {isLoading ? (
-                            <div className="space-y-3">
-                                {[1, 2, 3, 4, 5].map((i) => (
-                                    <Skeleton key={i} className="h-16 w-full" />
-                                ))}
-                            </div>
-                        ) : filteredEntries.length === 0 ? (
+                        {paginatedEntries.data.length === 0 ? (
                             <div className="rounded-lg border border-dashed border-border p-12 text-center">
                                 <ListChecks className="mx-auto h-12 w-12 text-muted-foreground" />
                                 <h3 className="mt-4 text-lg font-semibold">
@@ -377,7 +402,7 @@ export default function ViewOvertime({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {filteredEntries.map((entry) => (
+                                        {paginatedEntries.data.map((entry) => (
                                             <TableRow
                                                 key={entry.id}
                                                 className="hover:bg-muted/50"
@@ -415,7 +440,7 @@ export default function ViewOvertime({
                                                         entry.finish_date,
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="hidden max-w-xs text-sm text-muted-foreground md:table-cell">
+                                                <TableCell className="hidden w-full max-w-xs text-sm text-muted-foreground md:table-cell">
                                                     <div className="break-words whitespace-normal">
                                                         {entry.description}
                                                     </div>
@@ -423,7 +448,14 @@ export default function ViewOvertime({
                                                 <TableCell>
                                                     <Select
                                                         value={entry.status}
-                                                        // onValueChange={(value) => handleStatusUpdate(entry.id, value)}
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            handleStatusUpdate(
+                                                                entry.id,
+                                                                value,
+                                                            )
+                                                        }
                                                     >
                                                         <SelectTrigger className="h-8 w-[140px] border-0 focus:ring-0">
                                                             <Badge
@@ -561,7 +593,10 @@ export default function ViewOvertime({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>

@@ -1,0 +1,53 @@
+services:
+    laravel.test:
+        build:
+            context: ./docker/8.4
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.4/app
+        # Removed 'extra_hosts' for the DB connection since we'll use the service name
+        # ports and volumes remain the same...
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        # Add a dependency to ensure the DB starts before the application
+        depends_on:
+            - db
+
+    # --- ADD THIS NEW SERVICE ---
+    db:
+        image: 'postgres:15-alpine' # Using a modern version with alpine for a smaller image
+        ports:
+            # Only required if you want to access the DB from your host machine (e.g., with a GUI tool)
+            - '5432:5432'
+        environment:
+            # IMPORTANT: These must match your .env file
+            POSTGRES_DB: '${DB_DATABASE}'
+            POSTGRES_USER: '${DB_USERNAME}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            # This is recommended to persist your data outside the container
+            - 'sail-postgres:/var/lib/postgresql/data'
+        networks:
+            - sail
+        restart: unless-stopped
+
+# --- ADD THIS VOLUME ---
+networks:
+    sail:
+        driver: bridge
+
+volumes:
+    sail-postgres:
+        driver: local

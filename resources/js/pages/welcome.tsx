@@ -82,7 +82,6 @@ export default function Welcome({
     });
 
     const onSubmit = async (values: FormValues) => {
-        console.log(values);
         setIsSubmitting(true);
         try {
             router.post(
@@ -249,7 +248,6 @@ export default function Welcome({
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        // onClick={() => navigate("/records")}
                                         disabled={isSubmitting}
                                     >
                                         Cancel

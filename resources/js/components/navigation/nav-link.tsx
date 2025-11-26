@@ -16,7 +16,7 @@ export default function NavLink({
 }: NavLinkProps) {
     const { url } = usePage();
 
-    const isActive = url.startsWith(href);
+    const isActive = href === '/' ? url === '/' : url.startsWith(href);
 
     return (
         <Link

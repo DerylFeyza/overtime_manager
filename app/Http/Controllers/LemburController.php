@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Entry;
+use App\Models\Lembur;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class EntryController extends Controller
+class LemburController extends Controller
 {
   /**
    * Display a listing of the resource.
    */
   public function index()
   {
-    $entries = Entry::latest()->get();
+    $entries = Lembur::latest()->get();
 
     return Inertia::render('Records', [
       'entries' => $entries,
@@ -33,16 +33,16 @@ class EntryController extends Controller
       'status' => 'required|in:Pending,Compensated,Not Compensated',
     ]);
 
-    Entry::create($validated);
+    Lembur::create($validated);
 
-    return redirect()->back()->with('success', 'Entry created successfully');
+    return redirect()->back()->with('success', 'Lembur created successfully');
   }
   /**
    * Display the specified resource.
    */
-  public function show(Entry $entry)
+  public function show(Lembur $entry)
   {
-    return Inertia::render('Entry/Show', [
+    return Inertia::render('Lembur/Show', [
       'entry' => $entry,
     ]);
   }
@@ -50,7 +50,7 @@ class EntryController extends Controller
   /**
    * Update the specified resource in storage.
    */
-  public function update(Request $request, Entry $entry)
+  public function update(Request $request, Lembur $entry)
   {
     $validated = $request->validate([
       'person' => 'required|string|max:100',
@@ -62,15 +62,15 @@ class EntryController extends Controller
 
     $entry->update($validated);
 
-    return redirect()->back()->with('success', 'Entry updated successfully');
+    return redirect()->back()->with('success', 'Lembur updated successfully');
   }
   /**
    * Remove the specified resource from storage.
    */
-  public function destroy(Entry $entry)
+  public function destroy(Lembur $entry)
   {
     $entry->delete();
 
-    return redirect()->back()->with('success', 'Entry deleted successfully');
+    return redirect()->back()->with('success', 'Lembur deleted successfully');
   }
 }

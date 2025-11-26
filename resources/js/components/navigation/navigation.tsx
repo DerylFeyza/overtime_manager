@@ -23,13 +23,13 @@ export function Navigation() {
                             <span className="hidden sm:inline">Add Entry</span>
                         </NavLink>
                         <NavLink
-                            href="/records"
+                            href="/list"
                             className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             activeClassName="bg-primary text-primary-foreground hover:bg-primary"
                         >
                             <ListChecks className="h-4 w-4" />
                             <span className="hidden sm:inline">
-                                View Records
+                                List Lembur
                             </span>
                         </NavLink>
                         <AppearanceToggleTab className="ml-2" />

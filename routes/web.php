@@ -1,9 +1,11 @@
 <?php
 
-use App\Http\Controllers\EntryController;
+use App\Http\Controllers\LemburController;
+use App\Models\Lembur;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -11,17 +13,17 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
+Route::get('/list', function (Request $request) {
+    $perPage = $request->input('per_page', 10);
+    $entries = Lembur::orderBy('created_at', 'desc')->paginate($perPage);
 
-// Entry routes
-Route::get('/records', [EntryController::class, 'index'])->name('entries.index');
-Route::post('/entries', [EntryController::class, 'store'])->name('entries.store');
-Route::get('/entries/{entry}', [EntryController::class, 'show'])->name('entries.show');
-Route::put('/entries/{entry}', [EntryController::class, 'update'])->name('entries.update');
-Route::delete('/entries/{entry}', [EntryController::class, 'destroy'])->name('entries.destroy');
+    return Inertia::render('overtime/ViewOvertime', [
+        'entries' => $entries,
+    ]);
+})->name('overtime.view');
 
-require __DIR__ . '/settings.php';
+Route::get('/records', [LemburController::class, 'index'])->name('entries.index');
+Route::post('/entries', [LemburController::class, 'store'])->name('entries.store');
+Route::get('/entries/{entry}', [LemburController::class, 'show'])->name('entries.show');
+Route::put('/entries/{entry}', [LemburController::class, 'update'])->name('entries.update');
+Route::delete('/entries/{entry}', [LemburController::class, 'destroy'])->name('entries.destroy');
